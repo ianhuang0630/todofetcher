@@ -89,6 +89,77 @@ def get_feasible_set(todo2datedur, todo2priority, budget_datetime):
     
     return feasible_list 
 
+class CountDown(object):
+    def __init__(self, starting_time):
+        self.starting_time = starting_time
+        self.current_time = starting_time 
+        self.decrement_interval = 600
+        self.return_time = timedelta(seconds=0) 
+    
+    def start(self):
+        while self.current_time > self.return_time:
+            try:
+                # tic = time.time()
+                sys.stdout.write('\r{}'.format(colored(str(self.current_time), 'red')))
+                sys.stdout.flush()
+                time.sleep(0.01)
+                # toc = time.time()
+                self.current_time -= timedelta(seconds=0.01) 
+
+            except KeyboardInterrupt:
+                print("""
+Time out. 
+Options:
+1) Add more time [a]
+2) Check off item [c]
+3) Continue [n]
+4) Cancel [x]
+                """)
+                options = input()
+                if options.lower().strip() == 'a':
+                    print ("how much more time?")
+                    while True:
+                        try:
+                            time_str = input()
+                            extratime = duration2datetime(time_str)                
+                            self.current_time += extratime
+                            break 
+                        except:
+                            print('Invalid. Try again.')
+                elif options.lower().strip() == 'c':
+                    return {'status': 'complete',
+                            'remaining_time': self.current_time}
+                elif options.lower().strip() == 'n':
+                    pass 
+                elif options.lower().strip() == 'x':
+                    return {'status': 'term'}
+        
+        return {'status': 'out-of-time'}
+
+class TodoFetcher(object):
+    def __init__(self, todolist, time_budget):
+        self.todolist = todolist
+        self.time_budget = time_budget
+
+    def wait_for_commitment(self):
+        print('Ready to be productive? [Y/n]')
+        yon=input()
+        
+        if yon == 'y' or yon == 'Y':
+            self.start()
+        else:
+            print('Exiting.')
+    
+    def start(self):
+        for todo in self.todolist:
+            todo_str= todo['todo_item']
+            print(colored(todo_str, 'green'))
+            cd=CountDown(todo['times']['duration'])
+            exit_status = cd.start()
+            if exit_status['status'] == 'complete':
+                assert check_off_original_todo(todo['todo_item'])
+            print(exit_status)
+        return todo 
 
 if __name__=="__main__":
     print ('starting todo fetch')
@@ -131,11 +202,11 @@ if __name__=="__main__":
     print(colored('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@', 'cyan'))
     for element in feasible_set:
         print(colored(element['todo_item'], 'yellow'))
+    
+    TF = TodoFetcher(feasible_set, timedelta(seconds=2))
+    TF.wait_for_commitment()
+    
+    
 
     # counter = 0
-    # while True:
-    #     sys.stdout.write('\r{}'.format(colored(counter, 'cyan')))
-    #     sys.stdout.flush()
-    #     time.sleep(0.01)
-    #     counter += 1 
-    
+        

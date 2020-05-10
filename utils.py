@@ -303,6 +303,32 @@ def check_off_line(line):
     
     return None
 
+def check_off_original_todo(todo_string):
+    """
+    given a todo_string, check it off in the original todo list. 
+    """
+    try:
+        with open(config.TODOLIST_NAME, 'r') as f:
+            lines = f.readlines()
+            found = False
+            for idx, line in enumerate(lines):
+                if todo_string in line:
+                    lines[idx]=check_off_line(line)
+                    found = True
+                    break
+            if not found:
+                raise ValueError ('todo item [ {} ] not found in todolist'.format(todo_string))
+    except FileNotFoundError:
+        print('Failed to read todolist at location {}'.format(config.TODOLIST_NAME))
+        return False
+    try:
+        with open(config.TODOLIST_NAME, 'w') as f:
+            f.writelines(lines)
+            return True
+    except FileNotFoundError:
+        print('Failed to write to todolist at location {}'.format(config.TODOLIST_NAME))
+        return False
+
 def check_off_original_notes(fpath, hex_ids):
     """
     within a single note file, check off ever box corresponding to a list of 
