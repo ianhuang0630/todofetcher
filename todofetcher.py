@@ -137,9 +137,8 @@ Options:
         return {'status': 'out-of-time'}
 
 class TodoFetcher(object):
-    def __init__(self, todolist, time_budget):
+    def __init__(self, todolist):
         self.todolist = todolist
-        self.time_budget = time_budget
 
     def wait_for_commitment(self):
         print('Ready to be productive? [Y/n]')
@@ -158,6 +157,8 @@ class TodoFetcher(object):
             exit_status = cd.start()
             if exit_status['status'] == 'complete':
                 assert check_off_original_todo(todo['todo_item'])
+            if exit_status['status'] == 'out-of-time':
+                print('You ran out of time!') 
             print(exit_status)
         return todo 
 
@@ -203,10 +204,6 @@ if __name__=="__main__":
     for element in feasible_set:
         print(colored(element['todo_item'], 'yellow'))
     
-    TF = TodoFetcher(feasible_set, timedelta(seconds=2))
+    TF = TodoFetcher(feasible_set) 
     TF.wait_for_commitment()
-    
-    
-
-    # counter = 0
         
