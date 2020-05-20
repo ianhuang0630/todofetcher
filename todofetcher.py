@@ -28,7 +28,7 @@ def find_total_duration(l):
 
 def find_feasible_todos(duration, t2d):
     
-    feasible_todos = [t for t in t2d if t2d[t]['duration']< duration]
+    feasible_todos = [t for t in t2d if t2d[t]['duration']<= duration]
     return feasible_todos             
 
 def pick_by_priority(todos, t2p):
@@ -36,7 +36,7 @@ def pick_by_priority(todos, t2p):
     max_prio = -1
     best_todo = None
     for t in todos: 
-        if t2p[t] > max_prio:
+        if max(t2p[t], 0) > max_prio:
             max_prio = t2p[t]
             best_todo = t
     return best_todo
@@ -73,7 +73,6 @@ def get_feasible_set(todo2datedur, todo2priority, budget_datetime):
     remaining_duration = budget_datetime - total_duration
     
     while True:
-        
         next_task_options = find_feasible_todos(remaining_duration, todo2d)
         if len(next_task_options) == 0: 
             break
@@ -102,9 +101,9 @@ class CountDown(object):
                 # tic = time.time()
                 sys.stdout.write('\r{}'.format(colored(str(self.current_time), 'red')))
                 sys.stdout.flush()
-                time.sleep(0.01)
+                time.sleep(1)
                 # toc = time.time()
-                self.current_time -= timedelta(seconds=0.01) 
+                self.current_time -= timedelta(seconds=1) 
 
             except KeyboardInterrupt:
                 print("""
@@ -180,7 +179,7 @@ if __name__=="__main__":
         if duration is None:
             print('{} does not have an interpretable duration, will be replacing with default for this run.'.format(todo[0]))
             todo_default_time= add_placeholder_duration(todo[0])                        
-            print('modified to: {}'.format(todo_default_time)) 
+            print('interpreted as: {}'.format(todo_default_time)) 
             duration = find_duration(todo_default_time)
         expected_durations.append(duration)
 
