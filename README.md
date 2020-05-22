@@ -11,7 +11,9 @@ If you use hierarchies of folders to keep track of your notes, and use text edit
 
 Run `python todolist.py` to sync across your notes. 
 
-Run `python todofetcher.py [time]` to get a list of todolist items that are feasible within the time that you give it. `[time]` should be in the form `# h # m`, `# h` or `# m`. Note the space.
+Run `python todofetcher.py -t [time]` to get a list of todolist items that are feasible within the time that you give it. `[time]` should be in the form `# h # m`, `# h` or `# m`. Note the space.
+
+If you already have a sense of what you want to do, just run: `python todofetcher.py -s [substring of unchecked todo]` or `python todofetcher.py -k [keywords] [of] [todo]`
 
 ## If you're using vim...
 If you're using vim, then there's a good way to not have to close the file while running these programs are making changes to the file. In your `.vimrc`, make sure the following lines are somewhere in there.
