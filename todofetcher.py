@@ -7,6 +7,7 @@ import config
 from datetime import datetime, timedelta
 from termcolor import colored 
 import time
+import argparse
 
 def get_priorities(todo2datedur):
     today = datetime.now().date()
@@ -169,40 +170,80 @@ if __name__=="__main__":
         raise ValueError('Need to specify some amount of time')
     
     # get the total amount of time alotted for session
-    budget_time = sys.argv[1:]
-    budget_datetime = durationlist2datetime(budget_time)
     
-    todo2date = unchecked_by_date()
-    expected_durations = []
-    for todo in todo2date:
-        duration = find_duration(todo[0])
-        if duration is None:
-            print('{} does not have an interpretable duration, will be replacing with default for this run.'.format(todo[0]))
-            todo_default_time= add_placeholder_duration(todo[0])                        
-            print('interpreted as: {}'.format(todo_default_time)) 
-            duration = find_duration(todo_default_time)
-        expected_durations.append(duration)
-
-    assert len(todo2date) == len(expected_durations)
-    expected_durations = [duration2datetime(dur) for dur in expected_durations]
+    option = sys.argv[1]
     
-    todo2datedur = {}
-    for i in range(len(expected_durations)):
-        todo2datedur[todo2date[i][0]] = {'assign_date': todo2date[i][1],
-                                            'duration': expected_durations[i]}
-
-    # iterate through list of items, giving them different priorities.
-    todo2priority = get_priorities(todo2datedur)
-    feasible_set = get_feasible_set(todo2datedur, todo2priority, budget_datetime) 
-    
-    # these priorities are exponential to the date they are issued to the current date today.
-     
-    # display the todolist items, and start timing. Await for all items to be checked.
-    # users have three options: either cancel, request more time, or check off current item.
-    print(colored('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@', 'cyan'))
-    for element in feasible_set:
-        print(colored(element['todo_item'], 'yellow'))
-    
-    TF = TodoFetcher(feasible_set) 
-    TF.wait_for_commitment()
+    if option == '-s' or option == '-k':
+        todo2date = unchecked_by_date()
+        if option == '-s':
+            substring = ' '.join(sys.argv[2:])
+            # looking for valid todo
+            target_todo2date = [element for element in todo2date if substring in element[0]]
+        else:
+            keywords = sys.argv[2:]
+            target_todo2date = [element for element in todo2date if all([kw in element[0] for kw in keywords])]
         
+        if len(target_todo2date) < 1:
+            if option == '-s':
+                raise ValueError('substring does not exist among unchecked items in the todolist')
+            elif option == '-k':
+                raise ValueError('keyword(s) do not exist among unchecked items in the todolist')
+        
+        # get the duration
+        todo2datedur = {element[0]:{'assign_date': element[1], 'duration':duration2datetime(find_duration(element[0]))} for element in target_todo2date}
+        todo2priority = {element[0]: 0 for element in target_todo2date}
+        todo2timedur = [{'times': {'duration': todo2datedur[element[0]]['duration']}} for i, element in enumerate(target_todo2date)]
+        total_dur = find_total_duration(todo2timedur)
+        
+        feasible_set = get_feasible_set(todo2datedur, todo2priority, total_dur) 
+        
+        # these priorities are exponential to the date they are issued to the current date today.
+         
+        # display the todolist items, and start timing. Await for all items to be checked.
+        # users have three options: either cancel, request more time, or check off current item.
+        print(colored('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@', 'cyan'))
+        for element in feasible_set:
+            print(colored(element['todo_item'], 'yellow'))
+        
+        TF = TodoFetcher(feasible_set) 
+        TF.wait_for_commitment()
+
+    elif option == '-t':
+        budget_time = sys.argv[2:]
+        budget_datetime = durationlist2datetime(budget_time)
+        
+        todo2date = unchecked_by_date()
+        expected_durations = []
+        for todo in todo2date:
+            duration = find_duration(todo[0])
+            if duration is None:
+                print('{} does not have an interpretable duration, will be replacing with default for this run.'.format(todo[0]))
+                todo_default_time= add_placeholder_duration(todo[0])                        
+                print('interpreted as: {}'.format(todo_default_time)) 
+                duration = find_duration(todo_default_time)
+            expected_durations.append(duration)
+
+        assert len(todo2date) == len(expected_durations)
+        expected_durations = [duration2datetime(dur) for dur in expected_durations]
+        
+        todo2datedur = {}
+        for i in range(len(expected_durations)):
+            todo2datedur[todo2date[i][0]] = {'assign_date': todo2date[i][1],
+                                                'duration': expected_durations[i]}
+
+        # iterate through list of items, giving them different priorities.
+        todo2priority = get_priorities(todo2datedur)
+        feasible_set = get_feasible_set(todo2datedur, todo2priority, budget_datetime) 
+        
+        # these priorities are exponential to the date they are issued to the current date today.
+         
+        # display the todolist items, and start timing. Await for all items to be checked.
+        # users have three options: either cancel, request more time, or check off current item.
+        print(colored('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@', 'cyan'))
+        for element in feasible_set:
+            print(colored(element['todo_item'], 'yellow'))
+        
+        TF = TodoFetcher(feasible_set) 
+        TF.wait_for_commitment()
+    else:
+        raise ValueError('Invalid flag.')

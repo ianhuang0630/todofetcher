@@ -85,7 +85,7 @@ def unchecked_by_date():
     """
     with open(config.TODOLIST_NAME, 'r') as f:
         lines = f.readlines()
-        dates_lnb= find_all_datetimes_mmddyy_in_lines(lines) 
+        dates_lnb = find_all_datetimes_mmddyy_in_lines(lines) 
     
     todos, todo_nb = get_todos(config.TODOLIST_NAME, checked=False)
     todos_lnb = list(zip(todos, todo_nb))
