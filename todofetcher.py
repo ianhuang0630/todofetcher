@@ -178,10 +178,10 @@ if __name__=="__main__":
         if option == '-s':
             substring = ' '.join(sys.argv[2:])
             # looking for valid todo
-            target_todo2date = [element for element in todo2date if substring in element[0]]
+            target_todo2date = [element for element in todo2date if substring in element[0].lower()]
         else:
             keywords = sys.argv[2:]
-            target_todo2date = [element for element in todo2date if all([kw in element[0] for kw in keywords])]
+            target_todo2date = [element for element in todo2date if all([kw in element[0].lower() for kw in keywords])]
         
         if len(target_todo2date) < 1:
             if option == '-s':
